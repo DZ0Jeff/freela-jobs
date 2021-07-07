@@ -37,7 +37,6 @@ def main():
         # print('\n') 
         telegram.send_message(f"\nTítulo: {remove_whitespaces(title)}\n\nCliente: {remove_whitespaces(client)}\n\nDescrição: {remove_whitespaces(description)}\n\nLink: {link}\n\n")
 
-    # telegram.send_message(''.join(jobs_to_send))
 
 if __name__ == "__main__":
     schedule.every().day.at("09:00").do(main)
