@@ -2,6 +2,9 @@ from utils.telegram import TelegramBot
 from utils.setup import setSelenium
 from utils.parser_handler import init_crawler, remove_whitespaces
 import os
+import schedule
+from time import sleep
+
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -37,4 +40,9 @@ def main():
     # telegram.send_message(''.join(jobs_to_send))
 
 if __name__ == "__main__":
-    main()
+    schedule.every().day.at("09:00").do(main)
+
+    while True:
+        schedule.run_pending()
+        print('Listening...', end="\r")
+        sleep(1)
