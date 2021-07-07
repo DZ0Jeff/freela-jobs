@@ -20,12 +20,12 @@ class TelegramBot:
 
     def send_message(self, msg):
         try:
-            print('> Enviando mensagem...')
+            print('> Enviando mensagem...', end="\r")
             for chat in self.CHAT_ID:
                 self.bot.sendMessage(chat_id=chat, text=msg)
 
         except Exception as error:
-            print(f'> [ERRO] ao enviar mensagem! {error} ')
+            print(f'> [ERRO] ao enviar mensagem! {error} ', end="\r")
 
         else:
-            print('> Mensagem enviada com sucesso!')
+            print('> Mensagem enviada com sucesso!', end="\r")

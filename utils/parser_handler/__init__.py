@@ -24,3 +24,7 @@ def init_crawler(url):
 
 def init_parser(html):
     return BeautifulSoup(html, "lxml")
+
+
+def remove_whitespaces(text):
+    return ' '.join(text.split())
