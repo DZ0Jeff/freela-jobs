@@ -1,12 +1,13 @@
 from utils.telegram import TelegramBot
-from utils.setup import setSelenium
 from utils.parser_handler import init_crawler, remove_whitespaces
 import os
-import schedule
 from time import sleep
+import schedule
 
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+JOBS_99FRELLA = []
+WORKANA_JOBS = []
 
 
 def send_99freela(telegram):
@@ -15,6 +16,8 @@ def send_99freela(telegram):
 
     :telegram: => telegram client
     """
+    print('> Iniciando 99 freela...')
+
     freela_99 = init_crawler('https://www.99freelas.com.br/projects?q=rob%C3%B4')
     job_list = freela_99.find('ul', class_="result-list")
    
@@ -25,7 +28,14 @@ def send_99freela(telegram):
         title = job.find('h1', class_="title").text
         client = job.find('p', class_="item-text client").text
         description = job.find('div', class_="item-text description formatted-text").text
-        telegram.send_message(f"\nTítulo: {remove_whitespaces(title)}\n\nCliente: {remove_whitespaces(client)}\n\nDescrição: {remove_whitespaces(description)}\n\nLink: {link}\n\n")
+
+        if not link in JOBS_99FRELLA and link != '':
+            JOBS_99FRELLA.append(link)
+            msg = f"\nTítulo: {remove_whitespaces(title)}\n\nCliente: {remove_whitespaces(client)}\n\nDescrição: {remove_whitespaces(description)}\n\nLink: {link}\n\n"
+            telegram.send_message(msg)
+        
+        else:
+            print('> Vaga já enviada!', end="\r")
 
 
 def send_workana(telegram):
@@ -34,8 +44,15 @@ def send_workana(telegram):
 
     :telegram: => telegram client
     """
+    print('Iniciando workana...')
+
     base_link_workana = "https://www.workana.com"
     workana = init_crawler('https://www.workana.com/jobs?category=it-programming&language=pt&query=Crawler')
+    
+    if not workana:
+        print('Erro do site saindo...')
+        return
+    
     projects = workana.find('div', id="projects")
     
     print('> Pegando as informações...', end="\n")
@@ -45,8 +62,13 @@ def send_workana(telegram):
         title = project.find('h2').text
         details = project.find('div', class_="html-desc project-details").get_text(separator=" ")
 
-        workana_msg = f"Título: {remove_whitespaces(title)}\n\nDetalhes: {details}\n\nLink: {link}"
-        telegram.send_message(workana_msg)
+        if not link in WORKANA_JOBS and link != '':
+            WORKANA_JOBS.append(link)
+            workana_msg = f"Título: {remove_whitespaces(title)}\n\nDetalhes: {details}\n\nLink: {link}"
+            telegram.send_message(workana_msg)
+
+        else:
+            print('> Vaga já enviada!', end="\r")
 
 
 def main():
