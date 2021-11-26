@@ -1,0 +1,6 @@
+- [x] Scrappe workana
+- [x] Scrappe 99freela
+- [ ] Scrappe freelancer.com
+- [ ] Add more jobs targets to scrapper
+- [x] Add list to get the selected jobs
+- [ ] Add database to store lists

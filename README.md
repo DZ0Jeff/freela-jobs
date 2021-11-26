@@ -1,7 +1,6 @@
-# scrapper-boilerplate
+# Freela jobs
 
-
-Scrapping functions and for making easy for further scrapping
+Scrappe jobs on workana and 99 freela
 
 ## instalation
 

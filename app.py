@@ -1,3 +1,4 @@
+# from utils.running import load_status, write_status
 from utils.telegram import TelegramBot
 from utils.parser_handler import init_crawler, remove_whitespaces
 import os
@@ -18,13 +19,14 @@ def send_99freela(telegram):
     """
     print('> Iniciando 99 freela...')
 
-    freela_99 = init_crawler('https://www.99freelas.com.br/projects?q=rob%C3%B4')
+    base_link = 'https://www.99freelas.com.br'
+    freela_99 = init_crawler(f'{base_link}/projects?q=rob%C3%B4')
     job_list = freela_99.find('ul', class_="result-list")
    
     print('> Pegando as informações...', end="\n")
     for job in job_list.find_all('li'):
 
-        link = job.select_one('h1 a')['href']
+        link = base_link + job.select_one('h1 a')['href']
         title = job.find('h1', class_="title").text
         client = job.find('p', class_="item-text client").text
         description = job.find('div', class_="item-text description formatted-text").text
@@ -83,6 +85,24 @@ def main():
 
     
 if __name__ == "__main__":
+    # print('> Iniciando...')
+    # if load_status() == "true":
+    #     print('> Já esta rodando!')
+    #     exit()
+
+    # running = write_status("true")
+    # try:
+    #     main()
+
+    # except (Exception, KeyboardInterrupt) as error:
+    #     print(error)
+    #     write_status("false")
+    #     exit()
+
+    # print('Listening...', end="\r")
+    # sleep(86400)
+    # main()
+    # write_status("false")
     schedule.every().monday.at("12:00").do(main)
     schedule.every().wednesday.at("12:00").do(main)
     schedule.every().friday.at("12:00").do(main)
@@ -91,3 +111,4 @@ if __name__ == "__main__":
         schedule.run_pending()
         print('Listening...', end="\r")
         sleep(1)
+    
