@@ -1,14 +1,19 @@
 # from utils.running import load_status, write_status
+from bs4 import BeautifulSoup
 from utils.telegram import TelegramBot
 from utils.parser_handler import init_crawler, remove_whitespaces
 import os
 from time import sleep
 import schedule
+import re
+from src.database import DataStorage
 
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+job_storage = DataStorage()
 JOBS_99FRELLA = []
 WORKANA_JOBS = []
+FILTERS = ["bot", "robo", "scrapper", "crawler", "scrap", "scrapy", "beautifulsoap", "raspagem", "raspagem", "extração"]
 
 
 def send_99freela(telegram):
@@ -20,24 +25,44 @@ def send_99freela(telegram):
     print('> Iniciando 99 freela...')
 
     base_link = 'https://www.99freelas.com.br'
-    freela_99 = init_crawler(f'{base_link}/projects?q=rob%C3%B4')
-    job_list = freela_99.find('ul', class_="result-list")
-   
-    print('> Pegando as informações...', end="\n")
-    for job in job_list.find_all('li'):
+    page = 1
+    
+    links = job_storage.select_by_link()
+    saved_links = [link[0] for link in links if link != None]
 
-        link = base_link + job.select_one('h1 a')['href']
-        title = job.find('h1', class_="title").text
-        client = job.find('p', class_="item-text client").text
-        description = job.find('div', class_="item-text description formatted-text").text
-
-        if not link in JOBS_99FRELLA and link != '':
-            JOBS_99FRELLA.append(link)
-            msg = f"\nTítulo: {remove_whitespaces(title)}\n\nCliente: {remove_whitespaces(client)}\n\nDescrição: {remove_whitespaces(description)}\n\nLink: {link}\n\n"
-            telegram.send_message(msg)
+    while True:
+        try:
+            freela_99 = init_crawler(f'{base_link}/projects?categoria=web-mobile-e-software&page={page}')
+            job_list = freela_99.find('ul', class_="result-list")
         
-        else:
-            print('> Vaga já enviada!', end="\r")
+            print(f'> Página: {page}')
+            print('> Pegando as informações...')
+
+            for job in job_list.find_all('li'):
+                title:str = job.find('h1', class_="title").text
+                link:str = base_link + job.select_one('h1 a')['href']
+                
+                # check if contains the filtered word after extracting more items
+                if re.compile('|'.join(FILTERS),re.IGNORECASE).search(r"\b{}\b".format(title.split())):
+                    client:str = job.find('p', class_="item-text client").text
+                    description:str = job.find('div', class_="item-text description formatted-text").text
+                    
+                    if not link in saved_links:
+                        print('Inserindo no banco de dados...')
+                        job_storage.insert(title, link, client, description)
+
+                        JOBS_99FRELLA.append(link)
+                        msg:str = f"\nTítulo: {remove_whitespaces(title)}\n\nCliente: {remove_whitespaces(client)}\n\nDescrição: {remove_whitespaces(description)}\n\nLink: {link}\n\n"
+                        telegram.send_message(msg)
+
+                else:
+                    print('> Não existente no filtro ou ja extraído!', end="\r")
+
+            page += 1
+
+        except AttributeError:
+            print('> Final da página alcançando!')
+            break
 
 
 def send_workana(telegram):
@@ -82,27 +107,9 @@ def main():
     print('> iniciando robô...', end="\n")
     send_99freela(telegram)
     send_workana(telegram)
-
+    
     
 if __name__ == "__main__":
-    # print('> Iniciando...')
-    # if load_status() == "true":
-    #     print('> Já esta rodando!')
-    #     exit()
-
-    # running = write_status("true")
-    # try:
-    #     main()
-
-    # except (Exception, KeyboardInterrupt) as error:
-    #     print(error)
-    #     write_status("false")
-    #     exit()
-
-    # print('Listening...', end="\r")
-    # sleep(86400)
-    # main()
-    # write_status("false")
     schedule.every().monday.at("12:00").do(main)
     schedule.every().wednesday.at("12:00").do(main)
     schedule.every().friday.at("12:00").do(main)
