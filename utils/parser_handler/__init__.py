@@ -23,6 +23,9 @@ def init_crawler(url):
         print('Não conseguiu se conectar na página!')
         return
 
+    except Exception:
+        print('Algo deu errado :(')
+        return
 
 def init_parser(html):
     return BeautifulSoup(html, "lxml")

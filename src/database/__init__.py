@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, Column, Integer, Text, MetaData, Table, select
-
+from sqlalchemy.exc import OperationalError
 
 class DataStorage:
     def __init__(self) -> None:    
@@ -8,17 +8,23 @@ class DataStorage:
 
 
     def create_table(self):
-        metadata = MetaData()
-        self.jobs_schema = Table(
-            'jobs', metadata,
-            Column('id', Integer, primary_key=True),
-            Column('title', Text),
-            Column('link', Text),
-            Column('client', Text),
-            Column('description', Text),
-        )
+        try:
+            metadata = MetaData()
+            self.jobs_schema = Table(
+                'jobs', metadata,
+                Column('id', Integer, primary_key=True),
+                Column('title', Text),
+                Column('link', Text),
+                Column('client', Text),
+                Column('description', Text),
+            )
 
-        self.jobs_schema.create(bind=self.engine, checkfirst=True)
+            self.jobs_schema.create(bind=self.engine, checkfirst=True)
+        
+        except OperationalError as error:
+            print('> Erro ao conectar ao banco de dados!')
+            print(error)
+            return
 
     def insert(self, title, link, client, description):
         insert_message = self.jobs_schema.insert().values(title=title, link=link, client=client, description=description)

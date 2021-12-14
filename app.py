@@ -1,21 +1,22 @@
-# from utils.running import load_status, write_status
-from bs4 import BeautifulSoup
-from sqlalchemy.sql.expression import true
-from utils.telegram import TelegramBot
-from utils.parser_handler import init_crawler, remove_whitespaces
 import os
-from time import sleep
 import schedule
 import re
+from time import sleep
+
+from utils.telegram import TelegramBot
+from utils.parser_handler import init_crawler, init_parser, remove_whitespaces
+from utils.webdriver_handler import dynamic_page
+from utils.setup import setSelenium
+
 from src.database import DataStorage
 
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 job_storage = DataStorage()
-FILTERS = ["bot", "robo", "scrapper", "robô", "telegram", "crawler", "scrap", "scrapy", "beautifulsoap", "raspagem", "raspagem", "extração"]
+FILTERS = ["bot", "robo", "scrapper", "robô", "robot", "telegram", "crawler", "scrap", "scrapy", "beautifulsoap", "raspagem", "raspagem", "extração"]
 
 
-def send_99freela(telegram, saved_links):
+def send_99freela(telegram):
     """
     Send 99freela jobs to telegram
 
@@ -25,6 +26,7 @@ def send_99freela(telegram, saved_links):
 
     base_link = 'https://www.99freelas.com.br'
     page = 1
+    success = 0
 
     while True:
         try:
@@ -35,6 +37,9 @@ def send_99freela(telegram, saved_links):
             print('> Pegando as informações...')
 
             for job in job_list.find_all('li'):
+                data_links = job_storage.select_by_link()
+                saved_links = [link[0] for link in data_links if link != None]
+
                 title:str = job.find('h1', class_="title").text
                 link:str = base_link + job.select_one('h1 a')['href']
                 
@@ -46,6 +51,7 @@ def send_99freela(telegram, saved_links):
                     if not link in saved_links:
                         print('Inserindo no banco de dados...')
                         job_storage.insert(title, link, client, description)
+                        success += 1
 
                         msg:str = f"\nTítulo: {remove_whitespaces(title)}\n\nCliente: {remove_whitespaces(client)}\n\nDescrição: {remove_whitespaces(description)}\n\nLink: {link}\n\n"
                         telegram.send_message(msg)
@@ -58,9 +64,12 @@ def send_99freela(telegram, saved_links):
         except AttributeError:
             print('> Final da página alcançando!')
             break
+    
+    if success == 0:
+        telegram.send_message('[99freela] Não há novos trabalhos disponíveis')
 
 
-def send_workana(telegram, saved_links):
+def send_workana(telegram):
     """
     Send workana jobs to telegram
 
@@ -71,9 +80,9 @@ def send_workana(telegram, saved_links):
     base_link_workana = "https://www.workana.com"
     page = 1
     breakpoint_pagination = ""
+    success = 0
 
     while True:
-        # workana = init_crawler('https://www.workana.com/jobs?category=it-programming&language=pt&query=Crawler')
         print(f'> página: {page}')
         workana = init_crawler(f'https://www.workana.com/jobs?category=it-programming&language=pt&page={page}')
         
@@ -85,6 +94,8 @@ def send_workana(telegram, saved_links):
         
         print('> Pegando as informações...', end="\n")
         for project in projects.find_all('div', class_="project-item"):
+            data_links = job_storage.select_by_link()
+            saved_links = [link[0] for link in data_links if link != None]
 
             link = base_link_workana + project.find('a')['href']
             title = project.find('h2').text
@@ -102,11 +113,111 @@ def send_workana(telegram, saved_links):
                     job_storage.insert(title, link, '', details)
                     workana_msg = f"Título: {remove_whitespaces(title)}\n\nDetalhes: {details}\n\nLink: {link}"
                     telegram.send_message(workana_msg)
+                    success += 1
 
             else:
                 print('> Vaga já enviada!', end="\r")
         
         page += 1
+
+    if success == 0:
+        telegram.send_message('[Workana] Não há dados disponíveis')
+
+
+def send_freelancer_com(telegram):
+
+
+    def getTextFromTag(project, tag, class_name):
+        try:
+            return remove_whitespaces(project.find(tag, class_=class_name).text)
+
+        except Exception:
+            return ''
+
+    
+    BASE_LINK = "https://www.freelancer.com"
+    projects = []
+    success = 0
+
+    print('> iniciando freelancer.com')
+    for job_target in FILTERS:
+        freelancer_com = init_crawler(f'{BASE_LINK}/job-search/{job_target.lower()}/')
+
+        projects = freelancer_com.find('div', id='project-list')
+        for project in projects.find_all('div', class_="JobSearchCard-item")[:10]:
+            
+            data_links = job_storage.select_by_link()
+            saved_links = [link[0] for link in data_links if link != None]
+
+            title = getTextFromTag(project, 'a', "JobSearchCard-primary-heading-link")
+            link = BASE_LINK + project.find('a', "JobSearchCard-primary-heading-link")['href']
+            description = getTextFromTag(project, 'p', "JobSearchCard-primary-description")
+            price = getTextFromTag(project, 'div', "JobSearchCard-secondary-price")
+            biders = getTextFromTag(project, 'div','JobSearchCard-secondary-entry')
+
+            # add message to telegram and send it!
+            if not biders == "" and int(biders.split()[0]) <= 5 and not link in projects and not title.startswith('Project for') and not link in saved_links:
+                job_storage.insert(title, link, '', description)
+                projects.append(link)
+                freelancer_msg = f"Título: {title}\n\nDetalhes: {description}\n\nLink: {link}\n\nPreço: {price}/{biders}"
+                telegram.send_message(freelancer_msg)
+                success += 1
+
+    if success == 0:
+        telegram.send_message('[Freelancer.com] Não há dados disponíveis')
+
+    print('> Finalizado!')
+
+
+def send_upwork(telegram):
+    
+
+    def extract(link, success):
+        print('> iniciando webdriver...')
+        with setSelenium(False) as driver:
+            src_code = dynamic_page(driver, link)
+            upworks = init_parser(src_code)
+
+        print('> extraíndo dados...')
+        projects = upworks.select_one('div[data-ng-if="!moreResultsLoaded"]')
+        for job in projects.select('div div section'):
+            
+            data_links = job_storage.select_by_link()
+            saved_links = [link[0] for link in data_links if link != None]
+
+            try:
+                title = job.find('h4').text
+                details = job.find('span', attrs={'data-ng-bind-html':'truncatedHtml'}).text
+                link = BASE_LINK + job.find('h4').find('a')['href']
+                type = remove_whitespaces(job.find('strong', class_="js-type text-muted").text)
+            
+            except Exception:
+                print('> Error to extract job!')
+                continue
+
+            print(type)
+            print(title)
+            print(details)
+            print(link)
+            print('-' * 40)
+
+            if re.compile('|'.join(FILTERS),re.IGNORECASE).search(r"\b{}\b".format(title.split())) and not link in saved_links:
+                job_storage.insert(title, link, '', details)
+                msg = f"\nTítulo: {title}\n\nDescrição: {details}\n\nLink: {link}\n\n"
+                telegram.send_message(msg)
+                success += 1
+
+
+    BASE_LINK = "https://www.upwork.com"
+    success = 0
+    print('> iniciando upwork...')
+    for i in FILTERS:
+        extract(f'{BASE_LINK}/ab/jobs/search/t/1/?q={i.lower()}&sort=recency', success)
+    
+    if success == 0:
+        telegram.send_message('[UPWorks] Não há dados disponíveis')
+    
+    print('> Finalizado!')
 
 
 def main():
@@ -115,22 +226,22 @@ def main():
     """
     print('> iniciando robô...', end="\n")
     telegram = TelegramBot(ROOT_DIR)
-    links = job_storage.select_by_link()
-    saved_links = [link[0] for link in links if link != None]
 
     print('> extraíndo trabalhos...')
-    send_99freela(telegram, saved_links)
-    send_workana(telegram, saved_links)
+    send_99freela(telegram)
+    send_workana(telegram)
+    send_freelancer_com(telegram)
+    send_upwork(telegram)
     
     
 if __name__ == "__main__":
-    schedule.every().monday.at("12:00").do(main)
-    schedule.every().wednesday.at("12:00").do(main)
-    schedule.every().friday.at("12:00").do(main)
+    # schedule.every().monday.at("12:30").do(main)
+    # schedule.every().wednesday.at("12:30").do(main)
+    # schedule.every().friday.at("12:30").do(main)
 
-    while True:
-        schedule.run_pending()
-        print('Listening...', end="\r")
-        sleep(1)
-
+    # while True:
+    #     schedule.run_pending()
+    #     print('Listening...', end="\r")
+    #     sleep(1)
+    main()
     
