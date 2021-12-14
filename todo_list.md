@@ -19,7 +19,7 @@
     - [x] add database to freelancer.com
     - [ ] add database to upwork.com
 
-- [ ] Add upwork
+- [x] Add upwork
     - [x] analisys on site
     - [/] find if exists API
     - [x] find if is javascript loaded
@@ -29,7 +29,7 @@
         - [x] price
         - [x] catch fixed price only
     - [ ] Add pagination
-    - [ ] add filters
+    - [x] add filters
         - [x] fixed only
-        - [ ] add match allowed jobs
-        - [ ] add state database
+        - [x] add match allowed jobs
+        - [x] add state database
