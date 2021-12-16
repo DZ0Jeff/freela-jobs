@@ -7,6 +7,7 @@ from utils.telegram import TelegramBot
 from utils.parser_handler import init_crawler, init_parser, remove_whitespaces
 from utils.webdriver_handler import dynamic_page
 from utils.setup import setSelenium
+from utils.file_handler import save_to_html
 
 from src.database import DataStorage
 
@@ -136,12 +137,14 @@ def send_freelancer_com(telegram):
 
     
     BASE_LINK = "https://www.freelancer.com"
+    # "https://www.freelancer.com/jobs/?keyword=bot"
     projects = []
     success = 0
 
     print('> iniciando freelancer.com')
     for job_target in FILTERS:
-        freelancer_com = init_crawler(f'{BASE_LINK}/job-search/{job_target.lower()}/')
+        freelancer_com = init_crawler(f'{BASE_LINK}/jobs/?keyword={job_target.lower()}/')
+        if not freelancer_com: continue
 
         projects = freelancer_com.find('div', id='project-list')
         for project in projects.find_all('div', class_="JobSearchCard-item")[:10]:
@@ -156,7 +159,7 @@ def send_freelancer_com(telegram):
             biders = getTextFromTag(project, 'div','JobSearchCard-secondary-entry')
 
             # add message to telegram and send it!
-            if not biders == "" and int(biders.split()[0]) <= 5 and not link in projects and not title.startswith('Project for') and not link in saved_links:
+            if not biders == "" and int(biders.split()[0]) <= 5 and not title.startswith('Project for') and not link in saved_links:
                 job_storage.insert(title, link, '', description)
                 projects.append(link)
                 freelancer_msg = f"Título: {title}\n\nDetalhes: {description}\n\nLink: {link}\n\nPreço: {price}/{biders}"
@@ -243,5 +246,5 @@ if __name__ == "__main__":
         schedule.run_pending()
         print('Listening...', end="\r")
         sleep(1)
-
+    # main()
     
