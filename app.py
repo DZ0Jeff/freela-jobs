@@ -95,29 +95,29 @@ def send_workana(telegram):
         
         print('> Pegando as informações...', end="\n")
         for project in projects.find_all('div', class_="project-item"):
-            data_links = job_storage.select_by_link()
-            saved_links = [link[0] for link in data_links if link != None]
+            data_name = job_storage.select_by_name()
+            saved_names = [name[0] for name in data_name if name != None]
 
             link = base_link_workana + project.find('a')['href']
             title = project.find('h2').text
-            if re.compile('|'.join(FILTERS),re.IGNORECASE).search(r"\b{}\b".format(title.split())):
-                details = project.find('div', class_="html-desc project-details").get_text(separator=" ")
-                
-                # if 404 fails use the breakpoint to stop pagination
-                if breakpoint_pagination == link:
-                    print('> Limite alcançado!')
-                    break
-                else:
-                    breakpoint_pagination = link
+            
+            details = project.find('div', class_="html-desc project-details").get_text(separator=" ")
+            
+            # if 404 fails use the breakpoint to stop pagination
+            if breakpoint_pagination == link:
+                print('> Limite alcançado!')
+                break
+            else:
+                breakpoint_pagination = link
 
-                if not link in saved_links and link != '':
+                if not title in saved_names and re.compile('|'.join(FILTERS),re.IGNORECASE).search(r"\b{}\b".format(title.split())):
                     job_storage.insert(title, link, '', details)
                     workana_msg = f"Título: {remove_whitespaces(title)}\n\nDetalhes: {details}\n\nLink: {link}"
                     telegram.send_message(workana_msg)
                     success += 1
 
-            else:
-                print('> Vaga já enviada!', end="\r")
+                else:
+                    print('> Vaga já enviada!', end="\r")
         
         page += 1
 
@@ -183,6 +183,9 @@ def send_upwork(telegram):
 
         print('> extraíndo dados...')
         projects = upworks.select_one('div[data-ng-if="!moreResultsLoaded"]')
+
+        if not projects: return
+
         for job in projects.select('div div section'):
             
             data_links = job_storage.select_by_link()
@@ -246,5 +249,5 @@ if __name__ == "__main__":
         schedule.run_pending()
         print('Listening...', end="\r")
         sleep(1)
-    # main()
+    
     

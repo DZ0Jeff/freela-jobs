@@ -34,3 +34,8 @@ class DataStorage:
         stmt = select([self.jobs_schema.c.link]) 
         message = self.engine.execute(stmt).fetchall()
         return message 
+
+    def select_by_name(self):
+        stmt = select([self.jobs_schema.c.title]) 
+        message = self.engine.execute(stmt).fetchall()
+        return message 
