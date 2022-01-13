@@ -28,7 +28,11 @@ def init_crawler(url):
         return
 
 def init_parser(html):
-    return BeautifulSoup(html, "lxml")
+    try:
+        return BeautifulSoup(html, "lxml")
+
+    except Exception:
+        return
 
 
 def remove_whitespaces(text):

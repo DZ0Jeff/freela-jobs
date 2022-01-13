@@ -8,13 +8,14 @@ from utils.parser_handler import init_crawler, init_parser, remove_whitespaces
 from utils.webdriver_handler import dynamic_page
 from utils.setup import setSelenium
 from utils.file_handler import save_to_html
+from dotenv import load_dotenv
 
 from src.database import DataStorage
 
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 job_storage = DataStorage()
-FILTERS = ["bot", "robo", "scrapper", "robô", "robot", "telegram", "crawler", "scrap", "scrapy", "beautifulsoap", "raspagem", "raspagem", "extração"]
+FILTERS = ["bot", "robo", "scrapper", "robô", "robot", "telegram", "crawler", "scrap", "scrapy", "beautifulsoap",   "raspagem", "raspagem", "extração"]
 
 
 def send_99freela(telegram):
@@ -128,6 +129,19 @@ def send_workana(telegram):
 def send_freelancer_com(telegram):
 
 
+    def login(driver, email, password):
+        driver.get('https://www.freelancer.com/login')
+        driver.implicitly_wait(220)
+
+        driver.find_element_by_css_selector('input[type="email"]').send_keys(email)
+        driver.find_element_by_css_selector('input[type="password"]').send_keys(password)
+        sleep(3)
+        driver.find_element_by_css_selector('label.CheckboxLabel').click()
+        sleep(3)
+        driver.find_element_by_css_selector('button[type="submit"]').click()
+        sleep(5)            
+
+
     def getTextFromTag(project, tag, class_name):
         try:
             return remove_whitespaces(project.find(tag, class_=class_name).text)
@@ -135,39 +149,57 @@ def send_freelancer_com(telegram):
         except Exception:
             return ''
 
-    
-    BASE_LINK = "https://www.freelancer.com"
-    # "https://www.freelancer.com/jobs/?keyword=bot"
-    projects = []
-    success = 0
+    with setSelenium() as driver:
+        BASE_LINK = "https://www.freelancer.com"
+        # "https://www.freelancer.com/jobs/?keyword=bot"
+        projects = []
+        success = 0
 
-    print('> iniciando freelancer.com')
-    for job_target in FILTERS:
-        freelancer_com = init_crawler(f'{BASE_LINK}/jobs/?keyword={job_target.lower()}/')
-        if not freelancer_com: continue
+        print('> iniciando freelancer.com')
+        load_dotenv(os.path.join(ROOT_DIR, '.env'))
+        username = os.environ.get('FREELANCER_LOGIN')
+        password = os.environ.get('FREELANCER_PASSWORD')
 
-        projects = freelancer_com.find('div', id='project-list')
-        for project in projects.find_all('div', class_="JobSearchCard-item")[:10]:
+        login(driver, username, password)
+        
+        print('> extraíndo vagas')
+        for job_target in FILTERS:
+            print(f'> Pesquisando por: {job_target}')
+            src_code = dynamic_page(driver, f'{BASE_LINK}/search/projects?q={job_target.lower()}')
+
+            freelancer_com = init_parser(src_code)
+            if not freelancer_com: continue
             
-            data_links = job_storage.select_by_link()
-            saved_links = [link[0] for link in data_links if link != None]
+            projects = freelancer_com.find('ul', class_='search-result-list')
 
-            title = getTextFromTag(project, 'a', "JobSearchCard-primary-heading-link")
-            link = BASE_LINK + project.find('a', "JobSearchCard-primary-heading-link")['href']
-            description = getTextFromTag(project, 'p', "JobSearchCard-primary-description")
-            price = getTextFromTag(project, 'div', "JobSearchCard-secondary-price")
-            biders = getTextFromTag(project, 'div','JobSearchCard-secondary-entry')
+            if projects is None: continue
 
-            # add message to telegram and send it!
-            if not biders == "" and int(biders.split()[0]) <= 5 and not title.startswith('Project for') and not link in saved_links:
-                job_storage.insert(title, link, '', description)
-                projects.append(link)
-                freelancer_msg = f"Título: {title}\n\nDetalhes: {description}\n\nLink: {link}\n\nPreço: {price}/{biders}"
-                telegram.send_message(freelancer_msg)
-                success += 1
+            for project in projects.find_all('li', recursive=False):
+                
+                dataname = job_storage.select_by_name()
+                saved_name = [name[0] for name in dataname if name != None]
 
-    if success == 0:
-        telegram.send_message('[Freelancer.com] Não há dados disponíveis')
+                title = getTextFromTag(project, 'h2', "info-card-title")
+                try:
+                    link = BASE_LINK + project.find('a', "search-result-link")['href']
+                
+                except Exception:
+                    continue
+
+                description = getTextFromTag(project, 'p', "info-card-description")
+                price = getTextFromTag(project, 'div', "info-card-price")
+
+                # add message to telegram and send it!
+                if not title in saved_name:
+                    job_storage.insert(title, link, '', description)
+                    projects.append(link)
+                    freelancer_msg = f"Título: {title}\n\nDetalhes: {description}\n\nLink: {link}\n\nPreço: {price}"
+                    print(freelancer_msg)
+                    # telegram.send_message(freelancer_msg)
+                    success += 1
+
+        if success == 0:
+            telegram.send_message('[Freelancer.com] Não há dados disponíveis')
 
     print('> Finalizado!')
 
@@ -233,21 +265,22 @@ def main():
     print('> iniciando robô...', end="\n")
     telegram = TelegramBot(ROOT_DIR)
 
-    print('> extraíndo trabalhos...')
-    send_99freela(telegram)
-    send_workana(telegram)
+    # print('> extraíndo trabalhos...')
+    # send_99freela(telegram)
+    # send_workana(telegram)
     send_freelancer_com(telegram)
-    send_upwork(telegram)
+    # send_upwork(telegram)
     
     
 if __name__ == "__main__":
-    schedule.every().monday.at("12:30").do(main)
-    schedule.every().wednesday.at("12:30").do(main)
-    schedule.every().friday.at("12:30").do(main)
+    # schedule.every().monday.at("12:30").do(main)
+    # schedule.every().wednesday.at("12:30").do(main)
+    # schedule.every().friday.at("12:30").do(main)
 
-    while True:
-        schedule.run_pending()
-        print('Listening...', end="\r")
-        sleep(1)
+    # while True:
+    #     schedule.run_pending()
+    #     print('Listening...', end="\r")
+    #     sleep(1)
+    main()
     
     

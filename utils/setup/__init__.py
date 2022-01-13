@@ -14,7 +14,7 @@ def setSelenium(console=True, proxy=False):
     userAgent = ua.random
     load_dotenv()
 
-    if not console:
+    if console:
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
