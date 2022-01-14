@@ -168,12 +168,19 @@ def send_freelancer_com(telegram):
             print(f'> Pesquisando por: {job_target}')
             src_code = dynamic_page(driver, f'{BASE_LINK}/search/projects?q={job_target.lower()}')
 
-            freelancer_com = init_parser(src_code)
-            if not freelancer_com: continue
-            
-            projects = freelancer_com.find('ul', class_='search-result-list')
+            soap = init_parser(src_code)
 
-            if projects is None: continue
+            # save_to_html(soap)
+            if not soap: 
+                print('Pagina não achada!')
+                continue
+            
+            projects = soap.find('ul', class_='search-result-list')
+            # find why projects is returning none
+
+            if projects is None: 
+                print('Elemento não achado!')
+                continue
 
             for project in projects.find_all('li', recursive=False):
                 
@@ -195,8 +202,8 @@ def send_freelancer_com(telegram):
                     job_storage.insert(title, link, '', description)
                     projects.append(link)
                     freelancer_msg = f"Título: {title}\n\nDetalhes: {description}\n\nLink: {link}\n\nPreço: {price}"
-                    print(freelancer_msg)
-                    # telegram.send_message(freelancer_msg)
+                    # print(freelancer_msg)
+                    telegram.send_message(freelancer_msg)
                     success += 1
 
     if success == 0:
@@ -269,12 +276,12 @@ def main():
     # print('> extraíndo trabalhos...')
     send_99freela(telegram)
     send_workana(telegram)
-    # send_freelancer_com(telegram)
     send_upwork(telegram)
+    send_freelancer_com(telegram)
     
     
 if __name__ == "__main__":
-    main()
+    
     schedule.every().monday.at("12:30").do(main)
     schedule.every().wednesday.at("12:30").do(main)
     schedule.every().friday.at("12:30").do(main)
