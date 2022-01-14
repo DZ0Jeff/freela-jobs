@@ -149,11 +149,12 @@ def send_freelancer_com(telegram):
         except Exception:
             return ''
 
+
+    success = 0
     with setSelenium() as driver:
         BASE_LINK = "https://www.freelancer.com"
         # "https://www.freelancer.com/jobs/?keyword=bot"
         projects = []
-        success = 0
 
         print('> iniciando freelancer.com')
         load_dotenv(os.path.join(ROOT_DIR, '.env'))
@@ -198,8 +199,8 @@ def send_freelancer_com(telegram):
                     # telegram.send_message(freelancer_msg)
                     success += 1
 
-        if success == 0:
-            telegram.send_message('[Freelancer.com] Não há dados disponíveis')
+    if success == 0:
+        telegram.send_message('[Freelancer.com] Não há dados disponíveis')
 
     print('> Finalizado!')
 
@@ -266,21 +267,21 @@ def main():
     telegram = TelegramBot(ROOT_DIR)
 
     # print('> extraíndo trabalhos...')
-    # send_99freela(telegram)
-    # send_workana(telegram)
-    send_freelancer_com(telegram)
-    # send_upwork(telegram)
+    send_99freela(telegram)
+    send_workana(telegram)
+    # send_freelancer_com(telegram)
+    send_upwork(telegram)
     
     
 if __name__ == "__main__":
-    # schedule.every().monday.at("12:30").do(main)
-    # schedule.every().wednesday.at("12:30").do(main)
-    # schedule.every().friday.at("12:30").do(main)
-
-    # while True:
-    #     schedule.run_pending()
-    #     print('Listening...', end="\r")
-    #     sleep(1)
     main()
+    schedule.every().monday.at("12:30").do(main)
+    schedule.every().wednesday.at("12:30").do(main)
+    schedule.every().friday.at("12:30").do(main)
+
+    while True:
+        schedule.run_pending()
+        print('Listening...', end="\r")
+        sleep(1)
     
     
