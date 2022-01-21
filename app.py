@@ -217,7 +217,15 @@ def send_upwork(telegram):
 
     def extract(link, success):
         print('> iniciando webdriver...')
-        with setSelenium(False) as driver:
+
+        try:
+            driver = setSelenium(False) 
+
+        except Exception:
+            sleep(10)
+            driver = setSelenium(False)
+
+        with driver:
             src_code = dynamic_page(driver, link)
             upworks = init_parser(src_code)
 
