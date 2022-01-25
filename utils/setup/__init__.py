@@ -39,6 +39,7 @@ def setSelenium(console=True, proxy=False):
     chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
     prefs = {"profile.default_content_setting_values.notifications": 2}
     chrome_options.add_experimental_option("prefs", prefs)
+    
 
     chrome_options.binary_location = os.environ.get('GOOGLE_CHROME_BIN')
 
