@@ -289,15 +289,13 @@ def main():
     
     
 if __name__ == "__main__":
-    main()
-    
-    # schedule.every().monday.at("12:30").do(main)
-    # schedule.every().wednesday.at("12:30").do(main)
-    # schedule.every().friday.at("12:30").do(main)
+    schedule.every().monday.at("12:30").do(main)
+    schedule.every().wednesday.at("12:30").do(main)
+    schedule.every().friday.at("12:30").do(main)
 
-    # while True:
-    #     schedule.run_pending()
-    #     print('Listening...', end="\r")
-    #     sleep(1)
+    while True:
+        schedule.run_pending()
+        print('Listening...', end="\r")
+        sleep(1)
     
     
