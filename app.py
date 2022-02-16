@@ -130,6 +130,11 @@ def send_freelancer_com(telegram):
 
 
     def login(driver, email, password):
+        
+        if not(email, password) or (email, password) == "":
+            print("Email e/ou senha vázios!, insira email e/ou senha!")
+            return 
+
         driver.get('https://www.freelancer.com/login')
         driver.implicitly_wait(220)
 
@@ -162,6 +167,9 @@ def send_freelancer_com(telegram):
         password = os.environ.get('FREELANCER_PASSWORD')
 
         login(driver, username, password)
+        if not login: 
+            print("> erro de login!")
+            return
         
         print('> extraíndo vagas')
         for job_target in FILTERS:
@@ -170,16 +178,15 @@ def send_freelancer_com(telegram):
 
             soap = init_parser(src_code)
 
-            # save_to_html(soap)
             if not soap: 
-                print('Pagina não achada!')
+                print('> Pagina não achada!')
                 continue
             
             projects = soap.find('ul', class_='search-result-list')
-            # find why projects is returning none
 
+            # find why projects is returning none
             if projects is None: 
-                print('Elemento não achado!')
+                print('> Elemento não achado!')
                 continue
 
             for project in projects.find_all('li', recursive=False):
@@ -289,6 +296,7 @@ def main():
     
     
 if __name__ == "__main__":
+    # main()
     schedule.every().monday.at("12:30").do(main)
     schedule.every().wednesday.at("12:30").do(main)
     schedule.every().friday.at("12:30").do(main)
@@ -297,5 +305,4 @@ if __name__ == "__main__":
         schedule.run_pending()
         print('Listening...', end="\r")
         sleep(1)
-    
     
