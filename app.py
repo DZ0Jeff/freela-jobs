@@ -14,6 +14,7 @@ from src.database import DataStorage
 
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(ROOT_DIR, '.env'))
 job_storage = DataStorage()
 FILTERS = ["bot", "robo", "scrapper", "robô", "robot", "telegram", "crawler", "scrap", "scrapy", "beautifulsoap",   "raspagem", "raspagem", "extração"]
 
@@ -162,7 +163,6 @@ def send_freelancer_com(telegram):
         projects = []
 
         print('> iniciando freelancer.com')
-        load_dotenv(os.path.join(ROOT_DIR, '.env'))
         username = os.environ.get('FREELANCER_LOGIN')
         password = os.environ.get('FREELANCER_PASSWORD')
 
