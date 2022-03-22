@@ -297,7 +297,7 @@ def main():
     
 if __name__ == "__main__":
     # main()
-    main_hour = "12:00"
+    main_hour =  os.environ.get('POST_HOUR') #"12:00"
     schedule.every().monday.at(main_hour).do(main)
     schedule.every().wednesday.at(main_hour).do(main)
     schedule.every().friday.at(main_hour).do(main)
