@@ -297,9 +297,10 @@ def main():
     
 if __name__ == "__main__":
     # main()
-    schedule.every().monday.at("12:30").do(main)
-    schedule.every().wednesday.at("12:30").do(main)
-    schedule.every().friday.at("12:30").do(main)
+    main_hour = "12:00"
+    schedule.every().monday.at(main_hour).do(main)
+    schedule.every().wednesday.at(main_hour).do(main)
+    schedule.every().friday.at(main_hour).do(main)
 
     while True:
         schedule.run_pending()
