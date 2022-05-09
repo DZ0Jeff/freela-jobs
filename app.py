@@ -290,7 +290,7 @@ def main():
 
     # print('> extraíndo trabalhos...')
     send_99freela(telegram)
-    send_workana(telegram)
+    # send_workana(telegram)
     send_upwork(telegram)
     send_freelancer_com(telegram)
     
