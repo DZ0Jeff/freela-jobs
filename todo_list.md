@@ -33,3 +33,11 @@
         - [x] fixed only
         - [x] add match allowed jobs
         - [x] add state database
+
+
+- [ ] Add Toogit:
+    - [ ] login (with ramdom user)
+    - [x] extract jobs
+    - [x] add jobs to database
+    - [x] filter jobs to only that are NOT in database
+    - [x] send jobs to telegram
