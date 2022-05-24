@@ -1,14 +1,16 @@
+import logging
 import os
 import schedule
 import re
 from time import sleep
+from dotenv import load_dotenv
 
 from utils.telegram import TelegramBot
 from utils.parser_handler import init_crawler, init_parser, remove_whitespaces
-from utils.webdriver_handler import dynamic_page
+from utils.webdriver_handler import dynamic_page, load_dynamic_page
 from utils.setup import setSelenium
 from utils.file_handler import save_to_html
-from dotenv import load_dotenv
+from utils.log import log
 
 from src.database import DataStorage
 
@@ -16,7 +18,7 @@ from src.database import DataStorage
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(ROOT_DIR, '.env'))
 job_storage = DataStorage()
-FILTERS = ["bot", "robo", "scrapper", "robô", "robot", "telegram", "crawler", "scrap", "scrapy", "beautifulsoap",   "raspagem", "raspagem", "extração"]
+FILTERS = ["bot", "robo", "scrapper", "robô", "robot", "telegram", "crawler", "scrap", "scrapy", "beautifulsoap",  "raspagem", "raspagem", "extração", "web-scrapping", "web-crawling"]
 
 
 def send_99freela(telegram):
@@ -335,6 +337,41 @@ def send_toogit(telegram):
         telegram.send_message('[Toogit] Não há vagas disponíveis e/ou ocorreu um erro!')
 
 
+def send_guru(telegram):
+    print('> Iniciando guru...')
+    success = 0
+
+    for jobs in FILTERS:
+        soap = load_dynamic_page(f'https://www.guru.com/d/jobs/skill/{jobs}')
+        container = soap.find('ul', class_="module_list cozy")
+
+        if not container: continue
+
+        for item in container.find_all('li'):
+            data_links = job_storage.select_by_link()
+            saved_links = [link[0] for link in data_links if link != None]
+
+            try:
+                title = item.find('h2', class_="jobRecord__title").text
+
+            except AttributeError:
+                continue
+
+            link = "https://www.guru.com" + item.select_one('h2 a')['href']
+            description = item.find('p', class_="jobRecord__desc").text
+            client = item.find('div', class_="avatarinfo").text
+
+            if not link in saved_links:
+                job_storage.insert(title, link, client, description)
+                msg = f"\nTítulo: {remove_whitespaces(title)}\n\nDescrição: {remove_whitespaces(description)}\n\nLink: {remove_whitespaces(link)}\n\nCliente: {remove_whitespaces(client)}\n\n"
+                log(msg)
+                telegram.send_message(msg)
+                success += 1
+    
+    if success == 0:
+        telegram.send_message('[Guru] Não há vagas disponíveis e/ou ocorreu um erro!')
+
+
 def main():
     """
     send freela jobs to telegram
@@ -343,21 +380,23 @@ def main():
     telegram = TelegramBot(ROOT_DIR)
 
     print('> extraíndo trabalhos...')
-    send_99freela(telegram)
-    # send_workana(telegram)
-    send_upwork(telegram)
-    send_freelancer_com(telegram)
-    send_toogit(telegram)
-    
-if __name__ == "__main__":
-    # main()
-    main_hour =  os.environ.get('POST_HOUR') #"12:00"
-    schedule.every().monday.at(main_hour).do(main)
-    schedule.every().wednesday.at(main_hour).do(main)
-    schedule.every().friday.at(main_hour).do(main)
+    # send_99freela(telegram)
+    # # send_workana(telegram)
+    # send_upwork(telegram)
+    # send_freelancer_com(telegram)
+    # send_toogit(telegram)
+    send_guru(telegram)
 
-    while True:
-        schedule.run_pending()
-        print('Listening...', end="\r")
-        sleep(1)
+
+if __name__ == "__main__":
+    main()
+    # main_hour =  os.environ.get('POST_HOUR') #"12:00"
+    # schedule.every().monday.at(main_hour).do(main)
+    # schedule.every().wednesday.at(main_hour).do(main)
+    # schedule.every().friday.at(main_hour).do(main)
+
+    # while True:
+    #     schedule.run_pending()
+    #     print('Listening...', end="\r")
+    #     sleep(1)
     

@@ -1,4 +1,8 @@
+import logging
 from time import sleep
+from utils.parser_handler import init_parser
+from utils.setup import setSelenium
+from utils.log import log
 
 
 def scroll(driver):
@@ -20,6 +24,18 @@ def scroll(driver):
         if new_height == last_height:
             break
         last_height = new_height
+
+
+def load_dynamic_page(url):
+    log(f'> Extracting {url}')
+    with setSelenium() as driver:
+        driver.get(url)
+        driver.implicitly_wait(220)
+        sleep(5)
+        # driver.save_screenshot('screenshot.png')
+        html = driver.find_element_by_tag_name('html')
+        log(f'> Url loaded!')
+        return init_parser(html.get_attribute('outerHTML'))
 
 
 def dynamic_page(driver, url):
