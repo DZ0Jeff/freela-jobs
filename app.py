@@ -380,23 +380,23 @@ def main():
     telegram = TelegramBot(ROOT_DIR)
 
     print('> extraíndo trabalhos...')
-    # send_99freela(telegram)
-    # # send_workana(telegram)
-    # send_upwork(telegram)
-    # send_freelancer_com(telegram)
-    # send_toogit(telegram)
+    send_99freela(telegram)
+    # send_workana(telegram)
+    send_upwork(telegram)
+    send_freelancer_com(telegram)
+    send_toogit(telegram)
     send_guru(telegram)
 
 
 if __name__ == "__main__":
-    main()
-    # main_hour =  os.environ.get('POST_HOUR') #"12:00"
-    # schedule.every().monday.at(main_hour).do(main)
-    # schedule.every().wednesday.at(main_hour).do(main)
-    # schedule.every().friday.at(main_hour).do(main)
+    # main()
+    main_hour =  os.environ.get('POST_HOUR') #"12:00"
+    schedule.every().monday.at(main_hour).do(main)
+    schedule.every().wednesday.at(main_hour).do(main)
+    schedule.every().friday.at(main_hour).do(main)
 
-    # while True:
-    #     schedule.run_pending()
-    #     print('Listening...', end="\r")
-    #     sleep(1)
+    while True:
+        schedule.run_pending()
+        print('Listening...', end="\r")
+        sleep(1)
     
