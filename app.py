@@ -289,7 +289,7 @@ def send_toogit(telegram):
 
 
     def extract(telegram, success, url):
-        BASE_URL = "https://www.toogit"
+        BASE_URL = "https://www.toogit.com"
         print(f'> extraíndo {url}')
         soap = init_crawler(url)
 
@@ -389,14 +389,14 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
-    main_hour =  os.environ.get('POST_HOUR') #"12:00"
-    schedule.every().monday.at(main_hour).do(main)
-    schedule.every().wednesday.at(main_hour).do(main)
-    schedule.every().friday.at(main_hour).do(main)
+    main()
+    # main_hour =  os.environ.get('POST_HOUR') #"12:00"
+    # schedule.every().monday.at(main_hour).do(main)
+    # schedule.every().wednesday.at(main_hour).do(main)
+    # schedule.every().friday.at(main_hour).do(main)
 
-    while True:
-        schedule.run_pending()
-        print('Listening...', end="\r")
-        sleep(1)
+    # while True:
+    #     schedule.run_pending()
+    #     print('Listening...', end="\r")
+    #     sleep(1)
     
