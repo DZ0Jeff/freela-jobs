@@ -387,7 +387,6 @@ def main():
     send_toogit(telegram)
     send_guru(telegram)
 
-B
 
 if __name__ == "__main__":
     # main()
