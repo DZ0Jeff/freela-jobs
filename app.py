@@ -387,16 +387,17 @@ def main():
     send_toogit(telegram)
     send_guru(telegram)
 
+B
 
 if __name__ == "__main__":
-    main()
-    # main_hour =  os.environ.get('POST_HOUR') #"12:00"
-    # schedule.every().monday.at(main_hour).do(main)
-    # schedule.every().wednesday.at(main_hour).do(main)
-    # schedule.every().friday.at(main_hour).do(main)
+    # main()
+    main_hour =  os.environ.get('POST_HOUR') #"12:00"
+    schedule.every().monday.at(main_hour).do(main)
+    schedule.every().wednesday.at(main_hour).do(main)
+    schedule.every().friday.at(main_hour).do(main)
 
-    # while True:
-    #     schedule.run_pending()
-    #     print('Listening...', end="\r")
-    #     sleep(1)
+    while True:
+         schedule.run_pending()
+         print('Listening...', end="\r")
+         sleep(1)
     
