@@ -41,3 +41,17 @@
     - [x] add jobs to database
     - [x] filter jobs to only that are NOT in database
     - [x] send jobs to telegram
+
+
+- view broken sites
+    - [ ] upwork.com
+        - being detected by system anti-bot
+    - [ ] guru
+        - requires login
+    - [ ] freelancer.com
+        - [x] wait too short to load
+        - [ ] relocate elements
+        - [ ] indentify if is zero jobs and pass
+        - [ ] split on class and test it!
+    - [x] workana.com
+        - drop support

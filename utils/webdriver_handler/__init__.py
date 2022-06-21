@@ -3,6 +3,9 @@ from time import sleep
 from utils.parser_handler import init_parser
 from utils.setup import setSelenium
 from utils.log import log
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 def scroll(driver):
@@ -53,3 +56,12 @@ def check_tag(tag):
     except Exception as error:
         print('Error')
         return 'Não localizado...'
+
+
+def explicit_wait(driver, by, value, timeout=10):
+    try:
+        return WebDriverWait(driver, timeout).until(EC.presence_of_element_located((by, value))) 
+    
+    except Exception as error:
+        logging.error(error)
+        return False
