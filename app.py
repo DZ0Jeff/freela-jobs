@@ -30,20 +30,20 @@ def main():
     telegram = TelegramBot(ROOT_DIR)
 
     print('> extraíndo trabalhos...')
-    # send_99freela(telegram, {'filters':FILTERS} ,job_storage)
-    # send_upwork(telegram, job_storage, FILTERS, HEADLESS, REMOTE)
-    send_freelancer_com(telegram, { 'filters': FILTERS }, job_storage)
-    # send_toogit(telegram, job_storage, FILTERS)
+    send_99freela(telegram, {'filters':FILTERS} ,job_storage)
+    send_toogit(telegram, job_storage, FILTERS)
+    send_upwork(telegram, job_storage, FILTERS, HEADLESS, REMOTE)
+    # send_freelancer_com(telegram, { 'filters': FILTERS }, job_storage)
 
 if __name__ == "__main__":
-    main()
-    # main_hour =  os.environ.get('POST_HOUR') #"12:00"
-    # schedule.every().monday.at(main_hour).do(main)
-    # schedule.every().wednesday.at(main_hour).do(main)
-    # schedule.every().friday.at(main_hour).do(main)
+    # main()
+    main_hour =  os.environ.get('POST_HOUR') #"12:00"
+    schedule.every().monday.at(main_hour).do(main)
+    schedule.every().wednesday.at(main_hour).do(main)
+    schedule.every().friday.at(main_hour).do(main)
 
-    # while True:
-    #     schedule.run_pending()
-    #     print('Listening...', end="\r")
-    #     sleep(1)
+    while True:
+        schedule.run_pending()
+        print('Listening...', end="\r")
+        sleep(1)
     
