@@ -32,8 +32,9 @@ def main():
     print('> extraíndo trabalhos...')
     send_99freela(telegram, {'filters':FILTERS} ,job_storage)
     send_toogit(telegram, job_storage, FILTERS)
+    send_freelancer_com(telegram, FILTERS, job_storage)
     send_upwork(telegram, job_storage, FILTERS, HEADLESS, REMOTE)
-    # send_freelancer_com(telegram, { 'filters': FILTERS }, job_storage)
+
 
 if __name__ == "__main__":
     # main()

@@ -1,16 +1,26 @@
 import requests
 import os
+import re
 from dotenv import load_dotenv
 
 from scrapper_boilerplate import save_to_json
 
 
 class FreelancerCom:
-    def __init__(self, session, telegram, job_storage):
-        self.config = telegram
+
+    BASE_URL = "https://www.freelancer.com"
+
+    def __init__(self, session, telegram, job_storage, filters):
+        self.telegram = telegram
         self.job_storage = job_storage
         self.request = session
+        self.FILTERS = filters
         load_dotenv()
+
+    def load_last_jobs(self):
+        data_links = self.job_storage.select_by_link()
+        saved_links = [link[0] for link in data_links if link != None]
+        return saved_links
 
     def login(self):
 
@@ -90,6 +100,25 @@ class FreelancerCom:
         print(response.json())
         return response.json()
 
+    def parser(self, data):
+        for projects in data['result']['projects']:
+            status = projects['status']
+            if status != 'active': continue
+
+            saved_links = self.load_last_jobs()
+            link = self.BASE_URL + "/projects/" + projects['seo_url'] 
+            if link in saved_links: continue
+
+            title = projects['title']
+            if not re.compile('|'.join(self.FILTERS),re.IGNORECASE).search(r"\b{}\b".format(title.split())): continue
+            description = projects['description']
+
+            msg = f"Título: {title}\n\nDescrição: {description}\nLink: {link}"
+            print(msg)
+            print("\n\n")
+            self.telegram.send_message(msg)
+            self.job_storage.insert(title, link, '', description)
+
 
 def send_freelancer_com(telegram, filters, job_storage):
     """
@@ -97,9 +126,8 @@ def send_freelancer_com(telegram, filters, job_storage):
     """
 
     with requests.Session() as session:
-        freelacer_com = FreelancerCom(session, telegram, job_storage)
-        total = freelacer_com.get_jobs("bot")
-        total_count = total["result"]['total_count']
-        print(f"Total de jobs: {total_count}")
-        jobs = freelacer_com.get_jobs("bot", total_count)
-        save_to_json(jobs, "jobs.json")
+        freelacer_com = FreelancerCom(session, telegram, job_storage, filters)
+        for filter in filters:
+            print(f"> getting for {filter}...")
+            data = freelacer_com.get_jobs(filter.lower().replace(" ", "-"))
+            freelacer_com.parser(data)
